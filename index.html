@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pavan Kumar Lankapalli — Analytics Engineer</title>
+  <meta name="description" content="Analytics Engineer specializing in data infrastructure, semantic layer design (LookML, dbt), Snowflake optimization, and BI platforms." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- Background: grid + glow + floating 3D data cubes -->
+  <div class="bg-grid" aria-hidden="true"></div>
+  <div class="bg-glow" aria-hidden="true"></div>
+
+  <!--
+    Pipeline lifecycle background:
+      Phase 1 (~0-8s)  Raw events drift in randomly
+      Phase 2 (~8-16s) Data converges into a clean modeled table
+      Phase 3 (~16-24s) Table becomes bar / line / donut visualizations
+  -->
+  <div class="bg-flow" aria-hidden="true">
+
+    <!-- PHASE 1 · Raw data flowing -->
+    <div class="flow-phase phase-raw">
+      <span class="raw-bit r-a" style="--x:5%;  --y:10%; --d:0s;">0x4f2a_b91c</span>
+      <span class="raw-bit r-b" style="--x:82%; --y:8%;  --d:.3s;">{"id":42,"v":4.8}</span>
+      <span class="raw-bit r-c" style="--x:24%; --y:22%; --d:.7s;">1719428934</span>
+      <span class="raw-bit r-a" style="--x:64%; --y:24%; --d:.4s;">user_id=781</span>
+      <span class="raw-bit r-b" style="--x:8%;  --y:38%; --d:1s;">NULL,12,8.4,</span>
+      <span class="raw-bit r-c" style="--x:74%; --y:42%; --d:.2s;">event:"click"</span>
+      <span class="raw-bit r-a" style="--x:38%; --y:52%; --d:.9s;">ERROR 500</span>
+      <span class="raw-bit r-b" style="--x:88%; --y:60%; --d:.5s;">Δt=23ms</span>
+      <span class="raw-bit r-c" style="--x:4%;  --y:70%; --d:1.2s;">tx_id=#3192</span>
+      <span class="raw-bit r-a" style="--x:54%; --y:78%; --d:.8s;">"ces":1.8</span>
+      <span class="raw-bit r-b" style="--x:30%; --y:86%; --d:.4s;">acct:7f3a_e2</span>
+      <span class="raw-bit r-c" style="--x:80%; --y:88%; --d:1.1s;">v=0.4.1</span>
+      <span class="raw-bit r-a" style="--x:48%; --y:14%; --d:.6s;">"score":4.7</span>
+    </div>
+
+    <!-- PHASE 2 · Cleaned & modeled data -->
+    <div class="flow-phase phase-clean">
+      <svg class="clean-svg" viewBox="0 0 1200 700" preserveAspectRatio="xMidYMid meet">
+        <defs>
+          <linearGradient id="cleanHeader" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#7c9cff" stop-opacity="0.18"/>
+            <stop offset="100%" stop-color="#5eead4" stop-opacity="0.12"/>
+          </linearGradient>
+        </defs>
+
+        <!-- Table left -->
+        <g transform="translate(80, 140)" font-family="'JetBrains Mono', monospace">
+          <rect width="360" height="220" rx="8" fill="none" stroke="#7c9cff" stroke-width="1" opacity="0.55"/>
+          <rect x="0" y="0" width="360" height="34" rx="8" fill="url(#cleanHeader)"/>
+          <line x1="0" y1="34" x2="360" y2="34" stroke="#7c9cff" opacity="0.45"/>
+          <g fill="#7c9cff" font-size="11" font-weight="600">
+            <text x="20"  y="22">id</text>
+            <text x="78"  y="22">user</text>
+            <text x="186" y="22">csat</text>
+            <text x="244" y="22">ces</text>
+            <text x="302" y="22">date</text>
+          </g>
+          <g fill="#e6ecff" font-size="11">
+            <text x="20"  y="62">001</text><text x="78"  y="62">alice</text><text x="186" y="62">4.8</text><text x="244" y="62">1.6</text><text x="302" y="62">05-24</text>
+            <text x="20"  y="92">002</text><text x="78"  y="92">bob</text>  <text x="186" y="92">4.2</text><text x="244" y="92">2.1</text><text x="302" y="92">05-24</text>
+            <text x="20" y="122">003</text><text x="78" y="122">chloe</text><text x="186" y="122">4.9</text><text x="244" y="122">1.4</text><text x="302" y="122">05-23</text>
+            <text x="20" y="152">004</text><text x="78" y="152">dan</text>  <text x="186" y="152">4.6</text><text x="244" y="152">1.8</text><text x="302" y="152">05-23</text>
+            <text x="20" y="182">005</text><text x="78" y="182">eve</text>  <text x="186" y="182">4.7</text><text x="244" y="182">1.5</text><text x="302" y="182">05-22</text>
+            <text x="20" y="210" fill="#5eead4">avg</text><text x="78" y="210" fill="#5eead4">—</text><text x="186" y="210" fill="#5eead4">4.64</text><text x="244" y="210" fill="#5eead4">1.68</text><text x="302" y="210" fill="#5eead4">—</text>
+          </g>
+        </g>
+
+        <!-- Table right (smaller, dbt model preview) -->
+        <g transform="translate(760, 200)" font-family="'JetBrains Mono', monospace">
+          <text x="0" y="-12" fill="#5eead4" font-size="10" letter-spacing="1.5">model: mart_customer_health</text>
+          <rect width="320" height="180" rx="8" fill="none" stroke="#5eead4" stroke-width="1" opacity="0.5"/>
+          <rect x="0" y="0" width="320" height="32" rx="8" fill="url(#cleanHeader)"/>
+          <line x1="0" y1="32" x2="320" y2="32" stroke="#5eead4" opacity="0.45"/>
+          <g fill="#5eead4" font-size="10.5" font-weight="600">
+            <text x="20"  y="21">account</text>
+            <text x="140" y="21">tickets</text>
+            <text x="220" y="21">health</text>
+          </g>
+          <g fill="#e6ecff" font-size="10.5">
+            <text x="20"  y="58">acme_co</text>   <text x="140" y="58">3</text>  <text x="220" y="58">94</text>
+            <text x="20"  y="84">contoso</text>   <text x="140" y="84">7</text>  <text x="220" y="84">82</text>
+            <text x="20" y="110">globex</text>    <text x="140" y="110">2</text> <text x="220" y="110">96</text>
+            <text x="20" y="136">initech</text>   <text x="140" y="136">5</text> <text x="220" y="136">88</text>
+            <text x="20" y="162">umbrella</text>  <text x="140" y="162">1</text> <text x="220" y="162">99</text>
+          </g>
+        </g>
+      </svg>
+    </div>
+
+    <!-- PHASE 3 · Visualizations -->
+    <div class="flow-phase phase-viz">
+      <svg class="viz-svg" viewBox="0 0 1200 700" preserveAspectRatio="xMidYMid meet">
+        <defs>
+          <linearGradient id="vizBar" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#5eead4"/>
+            <stop offset="100%" stop-color="#7c9cff"/>
+          </linearGradient>
+          <linearGradient id="vizLine" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#7c9cff"/>
+            <stop offset="100%" stop-color="#5eead4"/>
+          </linearGradient>
+          <linearGradient id="vizArea" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#5eead4" stop-opacity="0.5"/>
+            <stop offset="100%" stop-color="#5eead4" stop-opacity="0"/>
+          </linearGradient>
+          <linearGradient id="vizDonut" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#7c9cff"/>
+            <stop offset="100%" stop-color="#5eead4"/>
+          </linearGradient>
+        </defs>
+
+        <!-- BAR CHART (left) -->
+        <g transform="translate(90, 220)">
+          <text x="0" y="-14" fill="#7c9cff" font-family="'JetBrains Mono', monospace" font-size="10" letter-spacing="1.5">QUERY VOLUME</text>
+          <line x1="0" y1="200" x2="280" y2="200" stroke="#7c9cff" opacity="0.4"/>
+          <g fill="url(#vizBar)">
+            <rect x="0"   y="120" width="24" height="80"  rx="3"><animate attributeName="height" values="80;110;80"   dur="3.4s" repeatCount="indefinite"/><animate attributeName="y" values="120;90;120"  dur="3.4s" repeatCount="indefinite"/></rect>
+            <rect x="34"  y="80"  width="24" height="120" rx="3"><animate attributeName="height" values="120;90;120"  dur="3s"   repeatCount="indefinite"/><animate attributeName="y" values="80;110;80"  dur="3s"   repeatCount="indefinite"/></rect>
+            <rect x="68"  y="100" width="24" height="100" rx="3"><animate attributeName="height" values="100;140;100" dur="3.6s" repeatCount="indefinite"/><animate attributeName="y" values="100;60;100" dur="3.6s" repeatCount="indefinite"/></rect>
+            <rect x="102" y="60"  width="24" height="140" rx="3"><animate attributeName="height" values="140;110;140" dur="2.8s" repeatCount="indefinite"/><animate attributeName="y" values="60;90;60"  dur="2.8s" repeatCount="indefinite"/></rect>
+            <rect x="136" y="80"  width="24" height="120" rx="3"><animate attributeName="height" values="120;150;120" dur="3.2s" repeatCount="indefinite"/><animate attributeName="y" values="80;50;80"  dur="3.2s" repeatCount="indefinite"/></rect>
+            <rect x="170" y="40"  width="24" height="160" rx="3"><animate attributeName="height" values="160;120;160" dur="3.4s" repeatCount="indefinite"/><animate attributeName="y" values="40;80;40"  dur="3.4s" repeatCount="indefinite"/></rect>
+            <rect x="204" y="30"  width="24" height="170" rx="3"><animate attributeName="height" values="170;140;170" dur="3s"   repeatCount="indefinite"/><animate attributeName="y" values="30;60;30"  dur="3s"   repeatCount="indefinite"/></rect>
+            <rect x="238" y="20"  width="24" height="180" rx="3"><animate attributeName="height" values="180;150;180" dur="2.6s" repeatCount="indefinite"/><animate attributeName="y" values="20;50;20"  dur="2.6s" repeatCount="indefinite"/></rect>
+          </g>
+        </g>
+
+        <!-- LINE CHART (center) -->
+        <g transform="translate(470, 240)">
+          <text x="0" y="-14" fill="#5eead4" font-family="'JetBrains Mono', monospace" font-size="10" letter-spacing="1.5">CSAT TREND</text>
+          <line x1="0" y1="180" x2="280" y2="180" stroke="#5eead4" opacity="0.4"/>
+          <path d="M 0 130 L 40 90 L 80 110 L 120 70 L 160 80 L 200 50 L 240 40 L 280 25 L 280 180 L 0 180 Z" fill="url(#vizArea)"/>
+          <path d="M 0 130 L 40 90 L 80 110 L 120 70 L 160 80 L 200 50 L 240 40 L 280 25" fill="none" stroke="url(#vizLine)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="600" stroke-dashoffset="600">
+            <animate attributeName="stroke-dashoffset" values="600;0;0;600" keyTimes="0;0.4;0.85;1" dur="6s" repeatCount="indefinite"/>
+          </path>
+          <g fill="#5eead4">
+            <circle cx="0"   cy="130" r="3.5"/>
+            <circle cx="40"  cy="90"  r="3.5"/>
+            <circle cx="80"  cy="110" r="3.5"/>
+            <circle cx="120" cy="70"  r="3.5"/>
+            <circle cx="160" cy="80"  r="3.5"/>
+            <circle cx="200" cy="50"  r="3.5"/>
+            <circle cx="240" cy="40"  r="3.5"/>
+            <circle cx="280" cy="25"  r="3.5"/>
+          </g>
+        </g>
+
+        <!-- DONUT / KPI (right) -->
+        <g transform="translate(900, 240)">
+          <text x="80" y="-22" text-anchor="middle" fill="#7c9cff" font-family="'JetBrains Mono', monospace" font-size="10" letter-spacing="1.5">RETENTION</text>
+          <circle cx="80" cy="80" r="60" fill="none" stroke="#1f2940" stroke-width="14"/>
+          <circle cx="80" cy="80" r="60" fill="none" stroke="url(#vizDonut)" stroke-width="14" stroke-linecap="round" stroke-dasharray="377" stroke-dashoffset="377" transform="rotate(-90 80 80)">
+            <animate attributeName="stroke-dashoffset" values="377;75;75;377" keyTimes="0;0.45;0.85;1" dur="6s" repeatCount="indefinite"/>
+          </circle>
+          <text x="80" y="84" text-anchor="middle" fill="#e6ecff" font-family="'JetBrains Mono', monospace" font-size="24" font-weight="700">80%</text>
+          <text x="80" y="102" text-anchor="middle" fill="#5eead4" font-family="'JetBrains Mono', monospace" font-size="9" opacity="0.8">▲ 4.2 pts</text>
+        </g>
+      </svg>
+    </div>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="nav">
+    <a href="#top" class="nav-brand">
+      <span class="brand-mark">PL</span>
+      <span class="brand-text">pavan.<span class="accent">eng</span></span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="#about">About</a></li>
+      <li><a href="#stack">Stack</a></li>
+      <li><a href="#experience">Experience</a></li>
+      <li><a href="#impact">Impact</a></li>
+      <li><a href="#contact" class="nav-cta">Get in touch</a></li>
+    </ul>
+  </nav>
+
+  <!-- Hero -->
+  <header id="top" class="hero">
+    <div class="hero-inner">
+      <div class="hero-avatar" aria-label="Photo of Pavan Kumar Lankapalli">
+        <span class="avatar-ring"></span>
+        <span class="avatar-orbit">
+          <span class="orbit-dot orbit-dot-1"></span>
+          <span class="orbit-dot orbit-dot-2"></span>
+          <span class="orbit-dot orbit-dot-3"></span>
+        </span>
+        <span class="avatar-inner">
+          <span class="avatar-fallback">PL</span>
+          <img
+            src="assets.png"
+            alt="Pavan Kumar Lankapalli"
+            class="avatar-img"
+            onerror="this.remove();"
+          />
+        </span>
+        <span class="avatar-badge">AE</span>
+      </div>
+
+      <div class="hero-tag">
+        <span class="dot"></span>
+        <span>Available for Analytics Engineering roles</span>
+      </div>
+      <h1 class="hero-title">
+        Pavan Kumar <span class="grad">Lankapalli</span>
+      </h1>
+      <p class="hero-role">Analytics Engineer · Data Infrastructure &amp; Insights</p>
+      <p class="hero-summary">
+        I build the data infrastructure, semantic layers, and BI platforms that leadership
+        actually trusts — cutting warehouse costs, enforcing data quality, and turning raw
+        events into governed, self-serve analytics.
+      </p>
+
+      <div class="hero-actions">
+        <a href="#experience" class="btn btn-primary">View experience</a>
+        <a href="#contact" class="btn btn-ghost">Contact me</a>
+      </div>
+
+      <!-- Headline metrics -->
+      <div class="metrics" role="list">
+        <div class="metric" role="listitem">
+          <div class="metric-value">40<span class="unit">%</span></div>
+          <div class="metric-label">Looker infra cost reduction</div>
+        </div>
+        <div class="metric" role="listitem">
+          <div class="metric-value">100<span class="unit">%</span></div>
+          <div class="metric-label">Cross-platform data integrity</div>
+        </div>
+        <div class="metric" role="listitem">
+          <div class="metric-value">15<span class="unit">+</span></div>
+          <div class="metric-label">LookML explores in production</div>
+        </div>
+        <div class="metric" role="listitem">
+          <div class="metric-value">99<span class="unit">%+</span></div>
+          <div class="metric-label">Dashboard uptime</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Live data pipeline visualization -->
+    <aside class="hero-viz" aria-label="Live data pipeline">
+      <!-- Pipeline diagram at the top (compact medium size) -->
+      <div class="viz-pipeline">
+        <svg viewBox="0 0 400 320" class="pipeline-svg" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+          <defs>
+            <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2.4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+            <linearGradient id="nodeFill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#1a2236" />
+              <stop offset="100%" stop-color="#0f1320" />
+            </linearGradient>
+            <linearGradient id="hi" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="#7c9cff" />
+              <stop offset="100%" stop-color="#5eead4" />
+            </linearGradient>
+
+            <!-- Convergence paths (sources bottom y=42, Fivetran top y=95) -->
+            <path id="pSF" d="M 68 42  C 68 75,  200 75, 200 95" fill="none" />
+            <path id="pJR" d="M 156 42 Q 156 70, 200 95" fill="none" />
+            <path id="pSN" d="M 244 42 Q 244 70, 200 95" fill="none" />
+            <path id="pNS" d="M 332 42 C 332 75, 200 75, 200 95" fill="none" />
+
+            <!-- Short connectors between stacked nodes -->
+            <path id="p1" d="M 200 130 L 200 150" fill="none" />
+            <path id="p2" d="M 200 185 L 200 205" fill="none" />
+            <path id="p3" d="M 200 240 L 200 260" fill="none" />
+          </defs>
+
+          <use href="#pSF" stroke="#2a375a" stroke-width="1.2" stroke-dasharray="3 4" opacity="0.7" />
+          <use href="#pJR" stroke="#2a375a" stroke-width="1.2" stroke-dasharray="3 4" opacity="0.7" />
+          <use href="#pSN" stroke="#2a375a" stroke-width="1.2" stroke-dasharray="3 4" opacity="0.7" />
+          <use href="#pNS" stroke="#2a375a" stroke-width="1.2" stroke-dasharray="3 4" opacity="0.7" />
+          <use href="#p1"  stroke="#2a375a" stroke-width="1.2" stroke-dasharray="3 4" opacity="0.7" />
+          <use href="#p2"  stroke="#2a375a" stroke-width="1.2" stroke-dasharray="3 4" opacity="0.7" />
+          <use href="#p3"  stroke="#2a375a" stroke-width="1.2" stroke-dasharray="3 4" opacity="0.7" />
+
+          <!-- 4 source chips (height 27) -->
+          <g font-family="'JetBrains Mono', monospace" font-size="9" fill="#a3adc7">
+            <g transform="translate(28, 15)">
+              <rect width="80" height="27" rx="7" fill="url(#nodeFill)" stroke="#2a375a" />
+              <text x="40" y="17.5" text-anchor="middle">Salesforce</text>
+            </g>
+            <g transform="translate(116, 15)">
+              <rect width="80" height="27" rx="7" fill="url(#nodeFill)" stroke="#2a375a" />
+              <text x="40" y="17.5" text-anchor="middle">Jira</text>
+            </g>
+            <g transform="translate(204, 15)">
+              <rect width="80" height="27" rx="7" fill="url(#nodeFill)" stroke="#2a375a" />
+              <text x="40" y="17.5" text-anchor="middle">ServiceNow</text>
+            </g>
+            <g transform="translate(292, 15)">
+              <rect width="80" height="27" rx="7" fill="url(#nodeFill)" stroke="#2a375a" />
+              <text x="40" y="17.5" text-anchor="middle">NetSuite</text>
+            </g>
+          </g>
+
+          <!-- Fivetran (y=95-130) -->
+          <g transform="translate(120, 95)">
+            <rect width="160" height="35" rx="8" fill="url(#nodeFill)" stroke="#7c9cff" stroke-opacity="0.45" />
+            <text x="80" y="14" text-anchor="middle" fill="#6c7796" font-family="'JetBrains Mono', monospace" font-size="8" letter-spacing="1.2">ELT</text>
+            <text x="80" y="28" text-anchor="middle" fill="#e6ecff" font-family="Inter, sans-serif" font-size="12" font-weight="600">Fivetran</text>
+          </g>
+
+          <!-- Snowflake (y=150-185) -->
+          <g transform="translate(120, 150)">
+            <rect width="160" height="35" rx="8" fill="url(#nodeFill)" stroke="#7c9cff" stroke-opacity="0.45" />
+            <text x="80" y="14" text-anchor="middle" fill="#6c7796" font-family="'JetBrains Mono', monospace" font-size="8" letter-spacing="1.2">WAREHOUSE</text>
+            <text x="80" y="28" text-anchor="middle" fill="#e6ecff" font-family="Inter, sans-serif" font-size="12" font-weight="600">Snowflake</text>
+          </g>
+
+          <!-- dbt (y=205-240) -->
+          <g transform="translate(120, 205)">
+            <rect width="160" height="35" rx="8" fill="url(#nodeFill)" stroke="#7c9cff" stroke-opacity="0.45" />
+            <text x="80" y="14" text-anchor="middle" fill="#6c7796" font-family="'JetBrains Mono', monospace" font-size="8" letter-spacing="1.2">TRANSFORM</text>
+            <text x="80" y="28" text-anchor="middle" fill="#e6ecff" font-family="Inter, sans-serif" font-size="12" font-weight="600">dbt</text>
+          </g>
+
+          <!-- LookML (y=260-295) -->
+          <g transform="translate(120, 260)">
+            <rect width="160" height="35" rx="8" fill="url(#nodeFill)" stroke="url(#hi)" stroke-width="1.5">
+              <animate attributeName="stroke-opacity" values="0.55;1;0.55" dur="3s" repeatCount="indefinite" />
+            </rect>
+            <text x="80" y="14" text-anchor="middle" fill="#5eead4" font-family="'JetBrains Mono', monospace" font-size="8" letter-spacing="1.2">SEMANTIC</text>
+            <text x="80" y="28" text-anchor="middle" fill="#e6ecff" font-family="Inter, sans-serif" font-size="12" font-weight="600">LookML</text>
+          </g>
+
+          <!-- Animated data packets — color-coded per source -->
+          <g filter="url(#glow)">
+            <circle r="2.5" fill="#7c9cff">
+              <animateMotion dur="2.4s" repeatCount="indefinite" begin="0s"><mpath href="#pSF" /></animateMotion>
+            </circle>
+            <circle r="2.5" fill="#7c9cff">
+              <animateMotion dur="2.4s" repeatCount="indefinite" begin="1.2s"><mpath href="#pSF" /></animateMotion>
+            </circle>
+
+            <circle r="2.5" fill="#5eead4">
+              <animateMotion dur="2s" repeatCount="indefinite" begin="0.4s"><mpath href="#pJR" /></animateMotion>
+            </circle>
+            <circle r="2.5" fill="#5eead4">
+              <animateMotion dur="2s" repeatCount="indefinite" begin="1.4s"><mpath href="#pJR" /></animateMotion>
+            </circle>
+
+            <circle r="2.5" fill="#fbbf24">
+              <animateMotion dur="2.2s" repeatCount="indefinite" begin="0.2s"><mpath href="#pSN" /></animateMotion>
+            </circle>
+            <circle r="2.5" fill="#fbbf24">
+              <animateMotion dur="2.2s" repeatCount="indefinite" begin="1.3s"><mpath href="#pSN" /></animateMotion>
+            </circle>
+
+            <circle r="2.5" fill="#f0abfc">
+              <animateMotion dur="2.6s" repeatCount="indefinite" begin="0.8s"><mpath href="#pNS" /></animateMotion>
+            </circle>
+            <circle r="2.5" fill="#f0abfc">
+              <animateMotion dur="2.6s" repeatCount="indefinite" begin="2s"><mpath href="#pNS" /></animateMotion>
+            </circle>
+
+            <circle r="3" fill="#7c9cff">
+              <animateMotion dur="0.9s" repeatCount="indefinite" begin="0s"><mpath href="#p1" /></animateMotion>
+            </circle>
+            <circle r="3" fill="#5eead4">
+              <animateMotion dur="0.9s" repeatCount="indefinite" begin="0.45s"><mpath href="#p1" /></animateMotion>
+            </circle>
+            <circle r="3" fill="#7c9cff">
+              <animateMotion dur="0.9s" repeatCount="indefinite" begin="0.3s"><mpath href="#p2" /></animateMotion>
+            </circle>
+            <circle r="3" fill="#5eead4">
+              <animateMotion dur="0.9s" repeatCount="indefinite" begin="0.75s"><mpath href="#p2" /></animateMotion>
+            </circle>
+            <circle r="3" fill="#7c9cff">
+              <animateMotion dur="0.9s" repeatCount="indefinite" begin="0.1s"><mpath href="#p3" /></animateMotion>
+            </circle>
+            <circle r="3" fill="#5eead4">
+              <animateMotion dur="0.9s" repeatCount="indefinite" begin="0.55s"><mpath href="#p3" /></animateMotion>
+            </circle>
+          </g>
+        </svg>
+      </div>
+
+      <!-- Chrome bar acts as the divider / title for the live chart below -->
+      <div class="viz-chrome">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+        <span class="viz-title">data_stack.live</span>
+        <span class="viz-status">
+          <span class="status-pulse"></span>
+          streaming
+        </span>
+      </div>
+
+      <!-- Live bar chart at the bottom -->
+      <div class="viz-chart">
+        <div class="chart-head">
+          <span class="chart-label">QUERY VOLUME · LAST 14D</span>
+          <span class="chart-trend">▲ 12.4%</span>
+        </div>
+        <div class="bars" id="liveBars">
+          <span class="viz-bar" style="--h:40%"></span>
+          <span class="viz-bar" style="--h:55%"></span>
+          <span class="viz-bar" style="--h:35%"></span>
+          <span class="viz-bar" style="--h:62%"></span>
+          <span class="viz-bar" style="--h:48%"></span>
+          <span class="viz-bar" style="--h:72%"></span>
+          <span class="viz-bar" style="--h:60%"></span>
+          <span class="viz-bar" style="--h:80%"></span>
+          <span class="viz-bar" style="--h:58%"></span>
+          <span class="viz-bar" style="--h:90%"></span>
+          <span class="viz-bar" style="--h:70%"></span>
+          <span class="viz-bar" style="--h:85%"></span>
+          <span class="viz-bar" style="--h:75%"></span>
+          <span class="viz-bar" style="--h:95%"></span>
+        </div>
+      </div>
+    </aside>
+  </header>
+
+  <!-- About -->
+  <section id="about" class="section">
+    <div class="section-head">
+      <span class="eyebrow">01 · About</span>
+      <h2>Bridging data engineering and business intelligence.</h2>
+    </div>
+    <div class="about-grid">
+      <p class="about-lead">
+        I'm an Analytics Engineer at <strong>Phenom</strong> with 2+ years of building
+        scalable data infrastructure, semantic models, and self-serve BI on
+        <strong>LookML</strong>, <strong>Snowflake</strong>, and <strong>dbt-style</strong>
+        modeling.
+      </p>
+      <p>
+        My focus is the layer between raw warehouse data and the dashboards executives
+        rely on — semantic modeling, PDT &amp; materialization strategy, ELT orchestration
+        with Fivetran, and rigorous cross-platform data quality. I work closely with
+        Customer Success, Product, and Operations to turn ambiguous requirements into
+        governed, trustworthy datasets.
+      </p>
+      <ul class="about-bullets">
+        <li><span class="check">›</span> Cut Looker warehouse costs by <strong>40%</strong> via PDTs &amp; query tuning.</li>
+        <li><span class="check">›</span> Maintain <strong>100% data integrity</strong> across Salesforce, Jira &amp; Looker.</li>
+        <li><span class="check">›</span> Own CSAT, CES, WBR, MBR, QBR dashboards used by C-suite.</li>
+        <li><span class="check">›</span> Reduced time-to-insight from <strong>days to hours</strong>.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- Stack -->
+  <section id="stack" class="section section-stack">
+    <!-- Decorative animated background: lineage graph, color glows, floating keywords -->
+    <div class="stack-bg" aria-hidden="true">
+      <div class="bg-glow-a"></div>
+      <div class="bg-glow-b"></div>
+
+      <svg class="bg-dag" viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid slice">
+        <defs>
+          <linearGradient id="dagLine" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%"  stop-color="#7c9cff" stop-opacity="0.0"/>
+            <stop offset="50%" stop-color="#7c9cff" stop-opacity="0.5"/>
+            <stop offset="100%" stop-color="#5eead4" stop-opacity="0.0"/>
+          </linearGradient>
+        </defs>
+
+        <g stroke="url(#dagLine)" stroke-width="1.2" fill="none" stroke-dasharray="4 6">
+          <path d="M 120 110 Q 320 90, 580 170" />
+          <path d="M 580 170 Q 720 250, 880 200" />
+          <path d="M 580 170 Q 470 400, 380 600" />
+          <path d="M 880 200 Q 1040 410, 950 660" />
+          <path d="M 120 110 Q 90 350, 210 560" />
+          <path d="M 210 560 Q 360 700, 600 700" />
+          <path d="M 950 660 Q 800 740, 600 700" />
+        </g>
+
+        <g>
+          <circle cx="120" cy="110" r="5" fill="#7c9cff" opacity="0.55">
+            <animate attributeName="opacity" values="0.25;0.9;0.25" dur="3s" repeatCount="indefinite"/>
+          </circle>
+          <circle cx="580" cy="170" r="5" fill="#5eead4" opacity="0.55">
+            <animate attributeName="opacity" values="0.4;1;0.4" dur="3.4s" repeatCount="indefinite" begin="0.4s"/>
+          </circle>
+          <circle cx="880" cy="200" r="5" fill="#f0abfc" opacity="0.55">
+            <animate attributeName="opacity" values="0.3;0.9;0.3" dur="2.8s" repeatCount="indefinite" begin="0.9s"/>
+          </circle>
+          <circle cx="380" cy="600" r="5" fill="#5eead4" opacity="0.55">
+            <animate attributeName="opacity" values="0.4;1;0.4" dur="3.2s" repeatCount="indefinite" begin="1.3s"/>
+          </circle>
+          <circle cx="950" cy="660" r="5" fill="#7c9cff" opacity="0.55">
+            <animate attributeName="opacity" values="0.3;0.85;0.3" dur="3s" repeatCount="indefinite" begin="1.8s"/>
+          </circle>
+          <circle cx="210" cy="560" r="5" fill="#f0abfc" opacity="0.55">
+            <animate attributeName="opacity" values="0.45;1;0.45" dur="2.6s" repeatCount="indefinite" begin="2.2s"/>
+          </circle>
+          <circle cx="600" cy="700" r="5" fill="#7c9cff" opacity="0.55">
+            <animate attributeName="opacity" values="0.3;0.9;0.3" dur="3.4s" repeatCount="indefinite" begin="2.7s"/>
+          </circle>
+        </g>
+      </svg>
+
+      <span class="bg-word" data-c="a"  style="--x:3%;  --y:6%;  --d:0s;   --dur:19s; --size:14px;">SELECT *</span>
+      <span class="bg-word" data-c="b"  style="--x:78%; --y:8%;  --d:3.5s; --dur:23s; --size:15px;">ref('stg_users')</span>
+      <span class="bg-word" data-c="c"  style="--x:14%; --y:38%; --d:7s;   --dur:21s; --size:12px;">PARTITION BY ds</span>
+      <span class="bg-word" data-c="a"  style="--x:82%; --y:46%; --d:1.6s; --dur:24s; --size:13px;">explore: users</span>
+      <span class="bg-word" data-c="b"  style="--x:5%;  --y:78%; --d:6s;   --dur:20s; --size:14px;">LEFT JOIN ON id</span>
+      <span class="bg-word" data-c="a"  style="--x:66%; --y:90%; --d:10s;  --dur:26s; --size:13px;">measure: avg_csat</span>
+      <span class="bg-word" data-c="c"  style="--x:48%; --y:58%; --d:12s;  --dur:22s; --size:12px;">PDT: nightly_etl</span>
+      <span class="bg-word" data-c="b"  style="--x:40%; --y:2%;  --d:14s;  --dur:21s; --size:13px;">WITH cte AS</span>
+      <span class="bg-word" data-c="a"  style="--x:90%; --y:72%; --d:5s;   --dur:25s; --size:12px;">GROUP BY 1, 2</span>
+      <span class="bg-word" data-c="c"  style="--x:28%; --y:18%; --d:9s;   --dur:23s; --size:13px;">dbt run --select</span>
+    </div>
+
+    <div class="section-head">
+      <span class="eyebrow">02 · Stack</span>
+      <h2>The tools I reach for.</h2>
+    </div>
+    <div class="stack-grid">
+      <article class="stack-card" data-theme="violet">
+        <div class="tool-cubes">
+          <span class="cube" data-tool="looker" title="Looker">
+            <span class="cube-fallback">Lk</span>
+            <img src="https://cdn.simpleicons.org/looker/ffffff" alt="" class="cube-logo" onerror="this.remove();" loading="lazy" />
+          </span>
+          <span class="cube" data-tool="excel" title="Microsoft Excel">
+            <span class="cube-fallback">X</span>
+            <img src="https://cdn.simpleicons.org/microsoftexcel/ffffff" alt="" class="cube-logo" onerror="this.remove();" loading="lazy" />
+          </span>
+        </div>
+        <h3>BI &amp; Semantic Layer</h3>
+        <p>Looker, LookML (explores, views, PDTs, datagroups), Advanced Excel.</p>
+        <ul class="tag-list">
+          <li>Looker</li><li>LookML</li><li>PDTs</li><li>Explores</li>
+        </ul>
+      </article>
+
+      <article class="stack-card" data-theme="cyan">
+        <div class="tool-cubes">
+          <span class="cube" data-tool="snowflake" title="Snowflake">
+            <span class="cube-fallback">❄</span>
+            <img src="https://cdn.simpleicons.org/snowflake/ffffff" alt="" class="cube-logo" onerror="this.remove();" loading="lazy" />
+          </span>
+          <span class="cube" data-tool="mysql" title="MySQL">
+            <span class="cube-fallback">My</span>
+            <img src="https://cdn.simpleicons.org/mysql/ffffff" alt="" class="cube-logo" onerror="this.remove();" loading="lazy" />
+          </span>
+        </div>
+        <h3>Warehouse</h3>
+        <p>Snowflake performance tuning, clustering, CTEs, window functions, MySQL.</p>
+        <ul class="tag-list">
+          <li>Snowflake</li><li>MySQL</li><li>SQL</li><li>Clustering</li>
+        </ul>
+      </article>
+
+      <article class="stack-card" data-theme="orange">
+        <div class="tool-cubes">
+          <span class="cube" data-tool="dbt" title="dbt">
+            <span class="cube-fallback">dbt</span>
+            <img src="https://cdn.simpleicons.org/dbt/ffffff" alt="" class="cube-logo" onerror="this.remove();" loading="lazy" />
+          </span>
+        </div>
+        <h3>Transformation</h3>
+        <p>dbt models, tests, macros, and documentation for governed pipelines.</p>
+        <ul class="tag-list">
+          <li>dbt models</li><li>Tests</li><li>Macros</li><li>Docs</li>
+        </ul>
+      </article>
+
+      <article class="stack-card" data-theme="emerald">
+        <div class="tool-cubes">
+          <span class="cube" data-tool="fivetran" title="Fivetran">
+            <span class="cube-fallback">5T</span>
+            <img src="https://cdn.simpleicons.org/fivetran/ffffff" alt="" class="cube-logo" onerror="this.remove();" loading="lazy" />
+          </span>
+        </div>
+        <h3>ELT &amp; Orchestration</h3>
+        <p>Fivetran ingestion with automated schema-drift detection and monitoring.</p>
+        <ul class="tag-list">
+          <li>Fivetran</li><li>Schema monitoring</li><li>Reconciliation</li>
+        </ul>
+      </article>
+
+      <article class="stack-card" data-theme="rose">
+        <div class="tool-cubes">
+          <span class="cube" data-tool="salesforce" title="Salesforce">
+            <span class="cube-fallback">SF</span>
+            <img src="https://cdn.simpleicons.org/salesforce/ffffff" alt="" class="cube-logo" onerror="this.remove();" loading="lazy" />
+          </span>
+          <span class="cube" data-tool="jira" title="Jira">
+            <span class="cube-fallback">J</span>
+            <img src="https://cdn.simpleicons.org/jira/ffffff" alt="" class="cube-logo" onerror="this.remove();" loading="lazy" />
+          </span>
+          <span class="cube" data-tool="servicenow" title="ServiceNow">
+            <span class="cube-fallback">SN</span>
+            <img src="https://cdn.simpleicons.org/servicenow/ffffff" alt="" class="cube-logo" onerror="this.remove();" loading="lazy" />
+          </span>
+          <span class="cube" data-tool="netsuite" title="NetSuite">
+            <span class="cube-fallback">NS</span>
+            <img src="https://cdn.simpleicons.org/oracle/ffffff" alt="" class="cube-logo" onerror="this.remove();" loading="lazy" />
+          </span>
+        </div>
+        <h3>Sources</h3>
+        <p>Salesforce, Jira, ServiceNow, NetSuite — wired into a single source of truth.</p>
+        <ul class="tag-list">
+          <li>Salesforce</li><li>Jira</li><li>ServiceNow</li><li>NetSuite</li>
+        </ul>
+      </article>
+
+      <article class="stack-card" data-theme="amber">
+        <div class="tool-cubes">
+          <span class="cube" data-tool="python" title="Python">
+            <span class="cube-fallback">Py</span>
+            <img src="https://cdn.simpleicons.org/python/ffffff" alt="" class="cube-logo" onerror="this.remove();" loading="lazy" />
+          </span>
+        </div>
+        <h3>Programming</h3>
+        <p>Python (Pandas, scripting) for ad-hoc data work and automation glue.</p>
+        <ul class="tag-list">
+          <li>Python</li><li>Pandas</li><li>Scripting</li>
+        </ul>
+      </article>
+    </div>
+  </section>
+
+  <!-- Experience -->
+  <section id="experience" class="section">
+    <div class="section-head">
+      <span class="eyebrow">03 · Experience</span>
+      <h2>Where I've built and shipped.</h2>
+    </div>
+
+    <!-- Role progression / promotion path -->
+    <div class="role-arc" aria-label="Career progression at Phenom">
+      <div class="arc-line"><div class="arc-fill"></div></div>
+      <div class="arc-stations">
+        <div class="station">
+          <div class="station-dot"></div>
+          <div class="station-info">
+            <span class="station-date">Mar 2024</span>
+            <span class="station-role">Associate Analytics Engineer</span>
+            <span class="station-co">Phenom · Hyderabad</span>
+          </div>
+        </div>
+        <div class="station promo">
+          <div class="station-dot"></div>
+          <div class="station-info">
+            <span class="station-date">Dec 2025</span>
+            <span class="station-role">Promoted</span>
+            <span class="station-co">★ Role progression</span>
+          </div>
+        </div>
+        <div class="station current">
+          <div class="station-dot"></div>
+          <div class="station-info">
+            <span class="station-date">Present</span>
+            <span class="station-role">Analytics Engineer</span>
+            <span class="station-co">Phenom · Hyderabad</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Single combined experience card -->
+    <article class="exp-card">
+      <header class="exp-header">
+        <div>
+          <h3>Analytics Engineer @ <span class="exp-co">Phenom</span></h3>
+          <span class="exp-meta">Mar 2024 — Present · Hyderabad, India · 2+ years</span>
+        </div>
+        <span class="exp-badge">Currently shipping</span>
+      </header>
+
+      <div class="exp-pillars">
+        <section class="pillar" data-theme="violet">
+          <span class="pillar-tag">01</span>
+          <h4>Data Infrastructure &amp; Cost Optimization</h4>
+          <ul>
+            <li>Architected <strong>Persistent Derived Tables (PDTs)</strong> and materialization strategies in LookML, reducing Looker infrastructure costs by <strong>40%</strong> and improving dashboard load times by <strong>~60%</strong>.</li>
+            <li>Designed and maintained a semantic layer covering <strong>15+ explores and 50+ reusable views</strong>, enabling self-serve analytics for non-technical stakeholders.</li>
+            <li>Authored complex Snowflake SQL using CTEs, window functions, and clustering to process multi-million-row datasets.</li>
+            <li>Monitored PDT build schedules and execution thresholds, maintaining <strong>99%+ uptime</strong> for business-critical dashboards.</li>
+          </ul>
+        </section>
+
+        <section class="pillar" data-theme="cyan">
+          <span class="pillar-tag">02</span>
+          <h4>ELT Pipelines &amp; Data Quality</h4>
+          <ul>
+            <li>Orchestrated <strong>Fivetran</strong> ELT pipelines from Salesforce and Jira into Snowflake with automated schema-drift detection — <strong>zero data loss</strong>.</li>
+            <li>Built a cross-platform reconciliation framework across Jira, Salesforce, and Looker, achieving <strong>100% data integrity</strong> on executive reporting.</li>
+            <li>Defined data contracts and field-level documentation in LookML — improving discoverability and cutting analyst onboarding time.</li>
+            <li>Authored reusable LookML views and measures that became the foundation of the company's governed semantic layer.</li>
+          </ul>
+        </section>
+
+        <section class="pillar" data-theme="rose">
+          <span class="pillar-tag">03</span>
+          <h4>Business Intelligence &amp; Executive Reporting</h4>
+          <ul>
+            <li>Owned <strong>CSAT</strong> and <strong>CES</strong> dashboards used by Customer Success to identify friction points and improve NPS and retention.</li>
+            <li>Built high-visibility <strong>WBR / MBR / QBR</strong> dashboards giving C-suite real-time KPI visibility for strategic decisions.</li>
+            <li>Partnered with CS, Product, and Ops to iterate on dashboards — reducing time-to-insight from <strong>days to hours</strong>.</li>
+          </ul>
+        </section>
+      </div>
+    </article>
+  </section>
+
+  <!-- Impact -->
+  <section id="impact" class="section">
+    <div class="section-head">
+      <span class="eyebrow">04 · Impact</span>
+      <h2>Outcomes leadership cared about.</h2>
+    </div>
+    <div class="impact-grid">
+      <div class="impact-card">
+        <div class="impact-stat">40%</div>
+        <h3>Lower Looker infra spend</h3>
+        <p>PDT design + smart caching strategies cut warehouse costs without sacrificing freshness.</p>
+      </div>
+      <div class="impact-card">
+        <div class="impact-stat">100%</div>
+        <h3>Data integrity</h3>
+        <p>Automated reconciliation across Salesforce, Jira, and Looker for every executive surface.</p>
+      </div>
+      <div class="impact-card">
+        <div class="impact-stat">15+</div>
+        <h3>Governed explores</h3>
+        <p>A semantic layer that serves multiple business units from a single source of truth.</p>
+      </div>
+      <div class="impact-card">
+        <div class="impact-stat">~60%</div>
+        <h3>Faster dashboards</h3>
+        <p>Materialization &amp; query tuning made business-critical dashboards near-instant.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Education -->
+  <section class="section">
+    <div class="section-head">
+      <span class="eyebrow">05 · Education</span>
+      <h2>Foundations.</h2>
+    </div>
+    <div class="edu-card">
+      <div>
+        <h3>B.Tech, Electronics &amp; Communication Engineering</h3>
+        <p class="edu-school">Lakireddy Bali Reddy College of Engineering (LBRCE), JNTU</p>
+      </div>
+      <div class="edu-meta">
+        <span>2018 — 2022</span>
+        <span class="edu-cgpa">CGPA 8.63 / 10</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contact -->
+  <section id="contact" class="section section-contact">
+    <div class="contact-card">
+      <span class="eyebrow">06 · Contact</span>
+      <h2>Let's build something leadership can trust.</h2>
+      <p>I'm open to Analytics Engineering and Data Platform roles. The fastest way to reach me is email.</p>
+
+      <div class="contact-links">
+        <a href="mailto:lpavankumar2000@gmail.com" class="contact-link">
+          <span class="cl-label">Email</span>
+          <span class="cl-value">lpavankumar2000@gmail.com</span>
+        </a>
+        <a href="tel:+918499046787" class="contact-link">
+          <span class="cl-label">Phone</span>
+          <span class="cl-value">+91 84990 46787</span>
+        </a>
+        <a href="https://www.linkedin.com/in/lankapalli-pavan-kumar-330a1b206/" target="_blank" rel="noopener" class="contact-link">
+          <span class="cl-label">LinkedIn</span>
+          <span class="cl-value">linkedin.com/in/lankapalli-pavan-kumar</span>
+        </a>
+        <div class="contact-link">
+          <span class="cl-label">Location</span>
+          <span class="cl-value">Hyderabad, India</span>
+        </div>
+      </div>
+
+      <div class="contact-resume">
+        <a href="resume.pdf" download="Pavan_Kumar_Lankapalli_Resume.pdf" class="resume-btn" aria-label="Download resume PDF">
+          <span class="resume-icon" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+          </span>
+          <span class="resume-label">
+            <span class="resume-title">Download Resume</span>
+            <span class="resume-meta">PDF · Pavan Kumar Lankapalli</span>
+          </span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <span>© <span id="year"></span> Pavan Kumar Lankapalli</span>
+    <span class="footer-meta">Built with semantic layers in mind.</span>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
