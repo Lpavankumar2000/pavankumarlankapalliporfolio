@@ -1,0 +1,161 @@
+// Footer year
+document.getElementById('year').textContent = new Date().getFullYear();
+
+// Mobile / tablet nav: hamburger toggles a right-side dropdown panel.
+(function initNavToggle() {
+  const toggle = document.getElementById('navToggle');
+  const menu = document.getElementById('navLinks');
+  if (!toggle || !menu) return;
+
+  const close = () => {
+    menu.classList.remove('is-open');
+    toggle.setAttribute('aria-expanded', 'false');
+  };
+
+  const open = () => {
+    menu.classList.add('is-open');
+    toggle.setAttribute('aria-expanded', 'true');
+  };
+
+  toggle.addEventListener('click', (e) => {
+    e.stopPropagation();
+    menu.classList.contains('is-open') ? close() : open();
+  });
+
+  // Close when a link inside the menu is clicked
+  menu.querySelectorAll('a').forEach((a) =>
+    a.addEventListener('click', close)
+  );
+
+  // Close when clicking outside the menu
+  document.addEventListener('click', (e) => {
+    if (!menu.classList.contains('is-open')) return;
+    if (!menu.contains(e.target) && !toggle.contains(e.target)) close();
+  });
+
+  // Close on Escape
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') close();
+  });
+
+  // Reset state if the viewport grows past the mobile breakpoint
+  const mq = window.matchMedia('(min-width: 901px)');
+  const onChange = (ev) => {
+    if (ev.matches) close();
+  };
+  if (mq.addEventListener) mq.addEventListener('change', onChange);
+  else if (mq.addListener) mq.addListener(onChange);
+})();
+
+// Subtle reveal-on-scroll for sections and cards
+const io = new IntersectionObserver(
+  (entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('is-in');
+        io.unobserve(entry.target);
+      }
+    });
+  },
+  { threshold: 0.12 }
+);
+
+document
+  .querySelectorAll(
+    '.section, .stack-card, .impact-card, .pillar, .exp-card, .role-arc, .metric, .hero-viz, .hero-avatar'
+  )
+  .forEach((el) => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(16px)';
+    el.style.transition =
+      'opacity 0.7s cubic-bezier(.2,.7,.2,1), transform 0.7s cubic-bezier(.2,.7,.2,1)';
+    io.observe(el);
+  });
+
+const style = document.createElement('style');
+style.textContent = `
+  .is-in { opacity: 1 !important; transform: none !important; }
+`;
+document.head.appendChild(style);
+
+// Active nav link highlighting
+const navLinks = document.querySelectorAll('.nav-links a[href^="#"]');
+const sections = [...navLinks]
+  .map((a) => document.querySelector(a.getAttribute('href')))
+  .filter(Boolean);
+
+const navObserver = new IntersectionObserver(
+  (entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        const id = entry.target.id;
+        navLinks.forEach((a) => {
+          a.style.color =
+            a.getAttribute('href') === `#${id}` ? 'var(--text)' : '';
+        });
+      }
+    });
+  },
+  { rootMargin: '-40% 0px -55% 0px' }
+);
+
+sections.forEach((s) => navObserver.observe(s));
+
+// Unique visitor counter.
+// Counts each browser only once via a localStorage flag, then displays the
+// running total from a free public counter API (Abacus). Returning visitors
+// hit the read-only GET endpoint so they don't increment the counter.
+(function initVisitorCounter() {
+  const NS = 'pavan-lankapalli-portfolio';
+  const KEY = 'unique-visitors';
+  const LOCAL_FLAG = 'plp_visitor_v1';
+
+  const display = document.getElementById('visitor-count');
+  const badge = document.getElementById('visitor-badge');
+  if (!display) return;
+
+  const hasVisitedBefore = localStorage.getItem(LOCAL_FLAG);
+  const action = hasVisitedBefore ? 'get' : 'hit';
+  const url = `https://abacus.jasoncameron.dev/${action}/${NS}/${KEY}`;
+
+  fetch(url)
+    .then((res) => res.json())
+    .then((data) => {
+      const count = data.value ?? data.count ?? 0;
+      display.textContent = count.toLocaleString();
+      if (!hasVisitedBefore) {
+        localStorage.setItem(LOCAL_FLAG, Date.now().toString());
+      }
+    })
+    .catch(() => {
+      display.textContent = '—';
+      if (badge) badge.classList.add('is-error');
+    });
+})();
+
+// Live streaming bar chart in the hero visualization.
+// Every tick, drop the oldest bar and push a new random value on the right,
+// giving the impression of a real-time query-volume stream.
+(function liveBars() {
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduce) return;
+
+  const bars = [...document.querySelectorAll('#liveBars .viz-bar')];
+  if (!bars.length) return;
+
+  const heights = bars.map(
+    (b) => parseInt(b.style.getPropertyValue('--h'), 10) || 50
+  );
+
+  function next() {
+    const base = 35 + Math.random() * 55;
+    const wobble = (Math.random() - 0.5) * 12;
+    return Math.max(20, Math.min(98, Math.round(base + wobble)));
+  }
+
+  setInterval(() => {
+    heights.shift();
+    heights.push(next());
+    bars.forEach((bar, i) => bar.style.setProperty('--h', heights[i] + '%'));
+  }, 1600);
+})();
